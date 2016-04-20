@@ -16,16 +16,9 @@ import java.util.jar.JarFile;
 
 public abstract class Gamepack {
 
-    /**
-     * A map of <code>ClassNode</code> objects mapped to their binary class
-     * names.
-     */
     public final Map<String, ClassNode> classes = new HashMap<>();
     private int cachedRevision = -1;
 
-    /**
-     * Restrict implementations to this package.
-     */
     Gamepack() {
 
     }

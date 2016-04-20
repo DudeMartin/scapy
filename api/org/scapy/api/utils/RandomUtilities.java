@@ -1,4 +1,6 @@
-package org.scapy.utils;
+package org.scapy.api.utils;
+
+import org.scapy.utils.Preconditions;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -23,8 +25,8 @@ public final class RandomUtilities {
      * generating one and checking if it is within the bounds, the number of
      * iterations needed to return one quickly increases as the bounds move
      * farther away from the mean. This constant establishes a threshold after
-     * which it would be too computationally expensive to generate a single
-     * number.
+     * which it would be too computationally expensive (and generally
+     * impractical) to generate a single number.
      */
     public static final double Z_SCORE_THRESHOLD = 5;
 

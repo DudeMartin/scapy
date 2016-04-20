@@ -3,8 +3,10 @@ package org.scapy.core.mod;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.MethodInsnNode;
+import org.scapy.api.WorldList;
 import org.scapy.core.accessors.IChatMessage;
 import org.scapy.core.accessors.IRenderableNode;
+import org.scapy.core.accessors.IWorld;
 import org.scapy.core.event.EventDispatcher;
 import org.scapy.core.event.impl.ChatMessageEvent;
 import org.scapy.core.event.impl.GameLoopEvent;
@@ -16,6 +18,10 @@ public final class Callbacks {
 
     private Callbacks() {
 
+    }
+
+    public static void onSortWorlds(IWorld[] worlds) {
+        WorldList.publish(worlds);
     }
 
     public static void onGroundItemSpawn(int x, int y, int plane) {

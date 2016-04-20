@@ -7,14 +7,8 @@ import org.scapy.core.accessors.IClient;
 import org.scapy.core.mod.Injector;
 import org.scapy.core.ui.GameWindow;
 import org.scapy.core.utils.DefinableClassLoader;
-import org.scapy.core.utils.RevisionUtilities;
-import org.scapy.utils.FilterUtilities;
-import org.scapy.utils.RandomUtilities;
+import org.scapy.core.utils.RevisionChecker;
 import org.scapy.utils.WebUtilities;
-import org.scapy.utils.WorldUtilities;
-import org.scapy.utils.WorldUtilities.WorldActivityFilter;
-import org.scapy.utils.WorldUtilities.WorldType;
-import org.scapy.utils.WorldUtilities.WorldTypeFilter;
 
 import java.applet.Applet;
 import java.io.IOException;
@@ -34,24 +28,16 @@ public class GameInstance {
     }
 
     public GameInstance() throws Exception {
-        this(Settings.getNumeric(DefaultSettings.INITIAL_WORLD, -1).intValue());
+        this(Settings.getNumeric(DefaultSettings.INITIAL_WORLD, 2).intValue());
     }
 
     private void initialize(int initialWorld) throws Exception {
-        if (!WorldUtilities.exists(initialWorld)) {
-            initialWorld = RandomUtilities.randomElement(
-                    FilterUtilities.filter(
-                            WorldUtilities.getWorlds(),
-                            FilterUtilities.join(
-                                    new WorldTypeFilter(WorldType.MEMBERS),
-                                    new WorldActivityFilter()))).number;
-        }
-        String pageAddress = WorldUtilities.getAddress(initialWorld);
+        String pageAddress = "http://oldschool" + initialWorld + ".runescape.com/";
         if (!Application.isVirtualMode()) {
             Path gamepackPath = Application.getApplicationPath("data", "gamepack.jar");
             if (Files.exists(gamepackPath)) {
                 gamepack = Gamepack.create(gamepackPath);
-                if (!RevisionUtilities.checkRevision(gamepack.getRevision())) {
+                if (!RevisionChecker.check(initialWorld, gamepack.getRevision())) {
                     gamepack = saveGamepack(gamepackPath, pageAddress);
                 }
             } else {

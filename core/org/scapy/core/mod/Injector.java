@@ -113,6 +113,9 @@ public final class Injector {
         String dummyValue       = parts[4];
         ClassNode targetClass   = classes.get(targetOwner);
         switch (callerName) {
+            case "sortWorlds":
+                Transformations.addSortWorldsCallback(targetClass, targetName, targetDescriptor);
+                break;
             case "spawnGroundItem":
                 Transformations.addSpawnGroundItemCallback(targetClass, targetName, targetDescriptor);
                 break;

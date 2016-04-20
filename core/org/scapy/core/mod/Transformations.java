@@ -37,6 +37,17 @@ class Transformations implements Opcodes {
         clazz.methods.add(getter);
     }
 
+    static void addSortWorldsCallback(ClassNode clazz, String targetName, String targetDescriptor) {
+        for (MethodNode method : (List<MethodNode>) clazz.methods) {
+            if (method.name.equals(targetName) && method.desc.equals(targetDescriptor)) {
+                InsnList callbackInstructions = new InsnList();
+                callbackInstructions.add(new VarInsnNode(ALOAD, 0));
+                callbackInstructions.add(Callbacks.generateInstruction("onSortWorlds"));
+                method.instructions.insert(callbackInstructions);
+            }
+        }
+    }
+
     static void addSpawnGroundItemCallback(ClassNode clazz, String targetName, String targetDescriptor) {
         for (MethodNode method : (List<MethodNode>) clazz.methods) {
             if (method.name.equals(targetName) && method.desc.equals(targetDescriptor)) {

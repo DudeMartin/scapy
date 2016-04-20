@@ -1,4 +1,6 @@
-package org.scapy.utils;
+package org.scapy.api.utils;
+
+import org.scapy.utils.Preconditions;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -30,7 +32,7 @@ public final class FilterUtilities {
      * @param <T>     the filter input type.
      * @return a joined filter.
      */
-    public static <T> Filter<T> join(final Filter<T> ... filters) {
+    public static <T> Filter<T> join(final Filter<T>... filters) {
         return new Filter<T>() {
 
             @Override

@@ -1,4 +1,4 @@
-package org.scapy.utils;
+package org.scapy.api.utils;
 
 /**
  * A filter checks if an object meets a certain criteria.

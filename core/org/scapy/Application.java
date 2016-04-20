@@ -88,9 +88,9 @@ public final class Application {
                 if (e instanceof IOException) {
                     errorMessage = "A transmission error occurred while loading the game.";
                 } else if (e instanceof InputMismatchException) {
-                    errorMessage = "Malformed hook data. The repository may be out of date.";
+                    errorMessage = "Malformed hook data file. The repository may be out of date.";
                 } else if (e instanceof HookDataException) {
-                    errorMessage = "A problem with the hook data occurred. " + e.getMessage();
+                    errorMessage = "A problem with the hook data file occurred. " + e.getMessage();
                 } else if (e instanceof ReflectiveOperationException) {
                     errorMessage = "Could not initialize the main game class.";
                 } else {
@@ -245,6 +245,33 @@ public final class Application {
         return game;
     }
 
+    /**
+     * Displays a message dialog and blocks the currently executing thread until
+     * it is dismissed. The dialog is created and displayed on the event
+     * dispatch thread.
+     *
+     * @param parent  the parent <code>Component</code>, may be
+     *                <code>null</code>.
+     * @param message the message to display.
+     * @param title   the dialog title.
+     * @param type    the message type.
+     * @see JOptionPane#showMessageDialog(Component, Object, String, int)
+     */
+    public static void showMessage(final Component parent,
+                                   final String message,
+                                   final String title,
+                                   final int type) {
+        try {
+            SwingUtilities.invokeAndWait(new Runnable() {
+
+                @Override
+                public void run() {
+                    JOptionPane.showMessageDialog(parent, message, title, type);
+                }
+            });
+        } catch (InterruptedException | InvocationTargetException ignored) {}
+    }
+
     private static boolean checkReadWritePrivileges(Path path) {
         return Files.isReadable(path) && Files.isWritable(path);
     }
@@ -271,18 +298,5 @@ public final class Application {
         if (!checkReadWritePrivileges(screenshotDirectory)) {
             forceVirtual = true;
         }
-    }
-
-    private static void showMessage(final Component parent,
-                                    final String message,
-                                    final String title,
-                                    final int type) throws InvocationTargetException, InterruptedException {
-        SwingUtilities.invokeAndWait(new Runnable() {
-
-            @Override
-            public void run() {
-                JOptionPane.showMessageDialog(parent, message, title, type);
-            }
-        });
     }
 }

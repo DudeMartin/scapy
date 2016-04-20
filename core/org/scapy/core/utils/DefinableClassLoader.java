@@ -1,7 +1,10 @@
 package org.scapy.core.utils;
 
 import org.objectweb.asm.tree.ClassNode;
+import org.scapy.Application;
+import org.scapy.core.ui.GameWindow;
 
+import javax.swing.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,7 +21,13 @@ public class DefinableClassLoader extends ClassLoader {
         ClassNode clazz = classes.remove(name);
         if (clazz != null) {
             byte[] classBytes = VerifyClassWriter.toBytes(clazz);
-            return defineClass(name, classBytes, 0, classBytes.length);
+            try {
+                return defineClass(name, classBytes, 0, classBytes.length);
+            } catch (ClassFormatError e) {
+                e.printStackTrace();
+                Application.showMessage(GameWindow.getWindow(), "The hook data specified invalid class modifications.", "Load Error", JOptionPane.ERROR_MESSAGE);
+                Application.shutdown();
+            }
         }
         return super.findClass(name);
     }
