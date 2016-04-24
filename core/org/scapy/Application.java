@@ -64,17 +64,16 @@ public final class Application {
             Settings.initialize();
         } catch (IOException e) {
             e.printStackTrace();
-            showMessage(null, "Could not load previous settings.", "Settings Warning", JOptionPane.WARNING_MESSAGE);
+            showMessage("Could not load previous settings.", "Settings Warning", JOptionPane.WARNING_MESSAGE);
         }
-        final JFrame[] window = new JFrame[1];
         SwingUtilities.invokeAndWait(new Runnable() {
 
             @Override
             public void run() {
-                window[0] = new GameWindow();
-                window[0].setTitle(NAME);
-                window[0].setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-                window[0].setVisible(true);
+                JFrame window = new GameWindow();
+                window.setTitle(NAME);
+                window.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+                window.setVisible(true);
             }
         });
         System.out.println("Loading the game...");
@@ -96,7 +95,7 @@ public final class Application {
                 } else {
                     errorMessage = "Could not load the game.";
                 }
-                showMessage(window[0], errorMessage, "Load Error", JOptionPane.ERROR_MESSAGE);
+                showMessage(errorMessage, "Load Error", JOptionPane.ERROR_MESSAGE);
                 shutdown();
             }
             return;
@@ -250,23 +249,18 @@ public final class Application {
      * it is dismissed. The dialog is created and displayed on the event
      * dispatch thread.
      *
-     * @param parent  the parent <code>Component</code>, may be
-     *                <code>null</code>.
      * @param message the message to display.
      * @param title   the dialog title.
      * @param type    the message type.
      * @see JOptionPane#showMessageDialog(Component, Object, String, int)
      */
-    public static void showMessage(final Component parent,
-                                   final String message,
-                                   final String title,
-                                   final int type) {
+    public static void showMessage(final String message, final String title, final int type) {
         try {
             SwingUtilities.invokeAndWait(new Runnable() {
 
                 @Override
                 public void run() {
-                    JOptionPane.showMessageDialog(parent, message, title, type);
+                    JOptionPane.showMessageDialog(GameWindow.getWindow(), message, title, type);
                 }
             });
         } catch (InterruptedException | InvocationTargetException ignored) {}

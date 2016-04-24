@@ -44,6 +44,7 @@ class Transformations implements Opcodes {
                 callbackInstructions.add(new VarInsnNode(ALOAD, 0));
                 callbackInstructions.add(Callbacks.generateInstruction("onSortWorlds"));
                 method.instructions.insert(callbackInstructions);
+                break;
             }
         }
     }
@@ -57,6 +58,7 @@ class Transformations implements Opcodes {
                 callbackInstructions.add(new VarInsnNode(ILOAD, 1));
                 callbackInstructions.add(Callbacks.generateInstruction("onGroundItemSpawn"));
                 method.instructions.insert(callbackInstructions);
+                break;
             }
         }
     }
@@ -70,6 +72,7 @@ class Transformations implements Opcodes {
                 callbackInstructions.add(new VarInsnNode(ILOAD, 1));
                 callbackInstructions.add(Callbacks.generateInstruction("onGroundItemDespawn"));
                 method.instructions.insert(callbackInstructions);
+                break;
             }
         }
     }
@@ -86,6 +89,7 @@ class Transformations implements Opcodes {
                 callbackInstructions.add(new InsnNode(RETURN));
                 callbackInstructions.add(labelNode);
                 method.instructions.insert(callbackInstructions);
+                break;
             }
         }
     }
@@ -101,6 +105,7 @@ class Transformations implements Opcodes {
                         method.instructions.insertBefore(instruction, callbackInstructions);
                     }
                 }
+                break;
             }
         }
     }
@@ -109,6 +114,7 @@ class Transformations implements Opcodes {
         for (MethodNode method : (List<MethodNode>) clazz.methods) {
             if (method.name.equals(targetName) && method.desc.equals(targetDescriptor)) {
                 method.instructions.insert(Callbacks.generateInstruction("onGameLoop"));
+                break;
             }
         }
     }
@@ -263,6 +269,7 @@ class Transformations implements Opcodes {
                 lockInstructions.add(new VarInsnNode(ALOAD, 0));
                 lockInstructions.add(new InsnNode(MONITOREXIT));
                 instructions.insert(instructions.getLast(), lockInstructions);
+                break;
             }
         }
     }

@@ -5,7 +5,6 @@ import org.scapy.Settings;
 import org.scapy.Settings.DefaultSettings;
 import org.scapy.core.event.EventDispatcher;
 import org.scapy.core.event.impl.PaintEvent;
-import org.scapy.core.ui.GameWindow;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -117,11 +116,11 @@ public class GameCanvas extends Canvas {
                             formatName = DEFAULT_FORMAT;
                             Settings.set(DefaultSettings.SCREENSHOT_FORMAT, formatName);
                             ImageIO.write(backBuffer, formatName, new File(filePath.replace(extension, formatName.toLowerCase())));
-                            Application.showMessage(GameWindow.getWindow(), "Unsupported screenshot format " + badFormatName + ". Defaulted to " + formatName + ".", "Screenshot Warning", JOptionPane.WARNING_MESSAGE);
+                            Application.showMessage("Unsupported screenshot format " + badFormatName + ". Defaulted to " + formatName + ".", "Screenshot Warning", JOptionPane.WARNING_MESSAGE);
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
-                        Application.showMessage(GameWindow.getWindow(), "Could not save the screenshot.", "Screenshot Error", JOptionPane.ERROR_MESSAGE);
+                        Application.showMessage("Could not save the screenshot.", "Screenshot Error", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             });
