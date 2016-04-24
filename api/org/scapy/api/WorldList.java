@@ -113,7 +113,9 @@ public final class WorldList {
          */
         public static boolean isType(IWorld world, Type type) {
             Preconditions.check(world != null && type != null, null, NullPointerException.class);
-            return (world.getType() & type.mask) != 0;
+            int worldMask = world.getType();
+            int typeMask = type.mask;
+            return (worldMask == typeMask) || ((worldMask & typeMask) != 0);
         }
     }
 
@@ -242,15 +244,25 @@ public final class WorldList {
         public final String activity;
 
         /**
+         * If this filter should match the world activity exactly. If this value
+         * is <code>false</code>, then this filter checks if the world activity
+         * string contains <code>activity</code>, rather than if it equals it.
+         */
+        public final boolean exact;
+
+        /**
          * Creates a new world activity filter.
          *
          * @param activity the activity to match.
+         * @param exact    if this filter should match the world activity
+         *                 exactly.
          * @throws NullPointerException if <code>activity</code> is
          *                              <code>null</code>.
          */
-        public ActivityFilter(String activity) {
+        public ActivityFilter(String activity, boolean exact) {
             Objects.requireNonNull(activity);
             this.activity = activity;
+            this.exact = exact;
         }
 
         /**
@@ -258,12 +270,12 @@ public final class WorldList {
          * official activity.
          */
         public ActivityFilter() {
-            this("-");
+            this("-", true);
         }
 
         @Override
         public boolean matches(IWorld test) {
-            return test.getActivity().equals(activity);
+            return exact ? test.getActivity().equals(activity) : test.getActivity().contains(activity);
         }
     }
 
