@@ -14,7 +14,7 @@ import java.io.IOException;
  *
  * @author Martin Tuskevicius
  */
-public final class GrandExchange {
+public final class GrandExchangeCatalog {
 
     private static final String GRAND_EXCHANGE_FORMAT = "http://services.runescape.com/m=itemdb_oldschool/api/catalogue/detail.json?item=%d";
     private static final int GOLD_ID = 995;
@@ -22,7 +22,7 @@ public final class GrandExchange {
     /**
      * Prevents external initialization.
      */
-    private GrandExchange() {
+    private GrandExchangeCatalog() {
 
     }
 
@@ -36,9 +36,9 @@ public final class GrandExchange {
      * @throws GrandExchangeException if no listing for the provided ID exists,
      *                                or if the response is malformed.
      */
-    public static GrandExchangeItem lookup(int id) throws IOException {
+    public static GrandExchangeListing lookup(int id) throws IOException {
         try {
-            return new GrandExchangeItem(id, new JSONObject(WebUtilities.downloadPageSource(String.format(GRAND_EXCHANGE_FORMAT, id))));
+            return new GrandExchangeListing(id, new JSONObject(WebUtilities.downloadPageSource(String.format(GRAND_EXCHANGE_FORMAT, id))));
         } catch (FileNotFoundException e) {
             throw new GrandExchangeException("No item listing found for " + id + ".");
         } catch (JSONException e) {
@@ -57,8 +57,8 @@ public final class GrandExchange {
      * @return the item listings.
      * @throws IOException if an I/O error occurs.
      */
-    public static GrandExchangeItem[] lookup(int ... ids) throws IOException {
-        GrandExchangeItem[] items = new GrandExchangeItem[ids.length];
+    public static GrandExchangeListing[] lookup(int... ids) throws IOException {
+        GrandExchangeListing[] items = new GrandExchangeListing[ids.length];
         for (int i = 0; i < ids.length; i++) {
             try {
                 items[i] = lookup(ids[i]);

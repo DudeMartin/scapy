@@ -45,6 +45,19 @@ public class GameCanvas extends Canvas {
      */
     public void takeScreenshot() {
         if (!Application.isVirtualMode()) {
+            if (formatName == null || dateFormat == null || screenshotService == null) {
+                synchronized (this) {
+                    formatName = Settings.get(DefaultSettings.SCREENSHOT_FORMAT, DEFAULT_FORMAT);
+                    dateFormat = new SimpleDateFormat("dd.MM.YYYY.HHmm.ss");
+                    screenshotService = Executors.newSingleThreadExecutor(new ThreadFactory() {
+
+                        @Override
+                        public Thread newThread(Runnable r) {
+                            return new Thread(r, "Screenshot Service Thread");
+                        }
+                    });
+                }
+            }
             screenshot = true;
         }
     }
@@ -53,7 +66,7 @@ public class GameCanvas extends Canvas {
      * Cleans up any resources utilized by the screenshot service. This method
      * is called during the shutdown procedure.
      */
-    public void cleanupScreenshotResources() {
+    public synchronized void cleanupScreenshotResources() {
         if (screenshotService != null) {
             screenshotService.shutdown();
         }
@@ -75,7 +88,7 @@ public class GameCanvas extends Canvas {
 
     @Override
     public void setSize(int width, int height) {
-        if(width != getWidth() && height != getHeight()) {
+        if (width != getWidth() && height != getHeight()) {
             super.setSize(width, height);
             if (width > 0 && height > 0) {
                 backBuffer = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -89,56 +102,29 @@ public class GameCanvas extends Canvas {
         super.processEvent(e);
     }
 
-    private void saveScreenshot() {
-        if (formatName == null || dateFormat == null || screenshotService == null) {
-            formatName = Settings.get(DefaultSettings.SCREENSHOT_FORMAT, DEFAULT_FORMAT);
-            dateFormat = new SimpleDateFormat("dd.MM.YYYY.HHmm.ss");
-            screenshotService = Executors.newSingleThreadExecutor(new ThreadFactory() {
+    private synchronized void saveScreenshot() {
+        if (!screenshotService.isShutdown()) {
+            screenshotService.submit(new Runnable() {
 
                 @Override
-                public Thread newThread(Runnable r) {
-                    return new Thread(r, "Screenshot Service Thread");
-                }
-            });
-        }
-        screenshotService.submit(new Runnable() {
-
-            @Override
-            public void run() {
-                String fileName = "Screenshot " + dateFormat.format(new Date()) + '.' + formatName.toLowerCase();
-                File screenshotFile = Application.getApplicationPath("screenshots", fileName).toFile();
-                try {
+                public void run() {
+                    String extension = formatName.toLowerCase();
+                    String fileName = "Screenshot " + dateFormat.format(new Date()) + "." + extension;
+                    String filePath = Application.getApplicationPath("screenshots", fileName).toString();
                     try {
-                        if (!ImageIO.write(backBuffer, formatName, screenshotFile)) {
+                        if (!ImageIO.write(backBuffer, formatName, new File(filePath))) {
+                            String badFormatName = formatName;
                             formatName = DEFAULT_FORMAT;
                             Settings.set(DefaultSettings.SCREENSHOT_FORMAT, formatName);
-                            ImageIO.write(backBuffer, formatName, screenshotFile);
-                            SwingUtilities.invokeAndWait(new Runnable() {
-
-                                @Override
-                                public void run() {
-                                    JOptionPane.showMessageDialog(GameWindow.getWindow(),
-                                            "Unsupported screenshot format. Defaulted to " + formatName + ".",
-                                            "Screenshot Warning",
-                                            JOptionPane.WARNING_MESSAGE);
-                                }
-                            });
+                            ImageIO.write(backBuffer, formatName, new File(filePath.replace(extension, formatName.toLowerCase())));
+                            Application.showMessage(GameWindow.getWindow(), "Unsupported screenshot format " + badFormatName + ". Defaulted to " + formatName + ".", "Screenshot Warning", JOptionPane.WARNING_MESSAGE);
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
-                        SwingUtilities.invokeAndWait(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                JOptionPane.showMessageDialog(GameWindow.getWindow(),
-                                        "Could not save the screenshot.",
-                                        "Screenshot Error",
-                                        JOptionPane.ERROR_MESSAGE);
-                            }
-                        });
+                        Application.showMessage(GameWindow.getWindow(), "Could not save the screenshot.", "Screenshot Error", JOptionPane.ERROR_MESSAGE);
                     }
-                } catch (Exception ignored) {}
-            }
-        });
+                }
+            });
+        }
     }
 }

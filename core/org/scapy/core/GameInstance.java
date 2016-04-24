@@ -13,11 +13,13 @@ import org.scapy.utils.WebUtilities;
 import java.applet.Applet;
 import java.io.IOException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class GameInstance {
 
+    private static final int DEFAULT_WORLD = 2;
     private Gamepack gamepack;
     private GameStub stub;
     private Applet clientApplet;
@@ -28,7 +30,7 @@ public class GameInstance {
     }
 
     public GameInstance() throws Exception {
-        this(Settings.getNumeric(DefaultSettings.INITIAL_WORLD, 2).intValue());
+        this(Settings.getNumeric(DefaultSettings.INITIAL_WORLD, DEFAULT_WORLD).intValue());
     }
 
     private void initialize(int initialWorld) throws Exception {
@@ -37,8 +39,15 @@ public class GameInstance {
             Path gamepackPath = Application.getApplicationPath("data", "gamepack.jar");
             if (Files.exists(gamepackPath)) {
                 gamepack = Gamepack.create(gamepackPath);
-                if (!RevisionChecker.check(initialWorld, gamepack.getRevision())) {
-                    gamepack = saveGamepack(gamepackPath, pageAddress);
+                try {
+                    if (!RevisionChecker.check(initialWorld, gamepack.getRevision())) {
+                        gamepack = saveGamepack(gamepackPath, pageAddress);
+                    }
+                } catch (UnknownHostException e) {
+                    System.err.println("Could not connect to world " + initialWorld + ". Attempting world " + DEFAULT_WORLD + "...");
+                    Settings.set(DefaultSettings.INITIAL_WORLD, DEFAULT_WORLD);
+                    initialize(DEFAULT_WORLD);
+                    return;
                 }
             } else {
                 gamepack = saveGamepack(gamepackPath, pageAddress);

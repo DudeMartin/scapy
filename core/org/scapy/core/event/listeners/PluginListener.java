@@ -5,8 +5,8 @@ import org.scapy.core.event.impl.PluginEvent;
 import java.util.EventListener;
 
 /**
- * The listener interface for receiving plugin events. Plugin events indicate
- * that the state of a plugin has changed.
+ * The listener interface for receiving plugin events. Plugin events are
+ * received when a plugin state changes.
  *
  * @author Martin Tuskevicius
  */

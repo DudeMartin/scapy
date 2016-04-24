@@ -1,12 +1,26 @@
 package org.scapy.api;
 
-import org.scapy.api.utils.Filter;
 import org.scapy.api.utils.FilterUtilities;
 import org.scapy.core.accessors.IWorld;
+import org.scapy.utils.Filter;
+import org.scapy.utils.Filter.DefaultFilter;
+import org.scapy.utils.Preconditions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
 
+/**
+ * A facility for reading the in-game world list. One important detail about
+ * this class is that the internal world list gets initialized (and updated
+ * thereafter) whenever the game client itself loads the world list. As a
+ * consequence, in order for this class to reflect the latest world information,
+ * the game client has to download a new world list. The user may manually force
+ * this update by opening the world selection screen at the login interface, or
+ * by opening the world switcher while logged in.
+ *
+ * @author Martin Tuskevicius
+ */
 public final class WorldList {
 
     /**
@@ -77,7 +91,7 @@ public final class WorldList {
         /**
          * A seasonal, Deadman Mode world.
          */
-        DEADMAN_SEASONAL(SEASONAL.mask | DEADMAN.mask);
+        DEADMAN_SEASONAL(DEADMAN.mask | SEASONAL.mask);
 
         /**
          * The bit mask associated with this world type.
@@ -86,6 +100,21 @@ public final class WorldList {
 
         Type(int mask) {
             this.mask = mask;
+        }
+
+        /**
+         * Determines if the specified world is of the provided type.
+         *
+         * @param world the world.
+         * @param type  the world type.
+         * @return <code>true</code> if the world is of the type,
+         *         <code>false</code> otherwise.
+         * @throws NullPointerException if <code>world</code> or <code>type</code>
+         *                              is <code>null</code>.
+         */
+        public static boolean isType(IWorld world, Type type) {
+            Preconditions.check(world != null && type != null, null, NullPointerException.class);
+            return (world.getType() & type.mask) != 0;
         }
     }
 
@@ -120,6 +149,7 @@ public final class WorldList {
     }
 
     private static final IWorld[] EMPTY = new IWorld[0];
+    private static final Filter<IWorld> DEFAULT_FILTER = new DefaultFilter<IWorld>();
     private static volatile IWorld[] worldList;
 
     /**
@@ -130,11 +160,11 @@ public final class WorldList {
     }
 
     /**
-     * Publishes a new world list. This method is intended for internal use.
+     * Updates the internal world list. This method is intended for internal use.
      *
      * @param worlds the new world list.
      */
-    public static void publish(IWorld[] worlds) {
+    public static void update(IWorld[] worlds) {
         if (worlds != null) {
             worldList = worlds;
         }
@@ -151,14 +181,38 @@ public final class WorldList {
     }
 
     /**
-     * Returns an array of worlds that match the filter.
+     * Returns an array of worlds that match the criteria of the specified
+     * filter. The returned array is a (shallow) copy of the internal world list.
+     * Any changes made to the return array will not be reflected in the
+     * internal list.
+     *
+     * <p>
+     * If the internal world list has not been initialized or if no worlds match
+     * the filter, then this method will return an array of length
+     * <code>0</code>; it will never return <code>null</code>.
      *
      * @param worldFilter the world filter.
-     * @return an array of worlds. This array will have length <code>0</code> if
-     *         no worlds match the filter or if the internal world list has not
-     *         been initialized. This method will never return <code>null</code>.
+     * @return an array of worlds.
+     * @throws NullPointerException if the internal world list is initialized
+     *                              and <code>worldFilter</code> is
+     *                              <code>null</code>.
      */
     public static IWorld[] get(Filter<IWorld> worldFilter) {
-        return isInitialized() ? FilterUtilities.filter(new ArrayList<>(Arrays.asList(worldList.clone())), worldFilter).toArray(EMPTY) : EMPTY;
+        if (isInitialized()) {
+            Objects.requireNonNull(worldFilter);
+            return FilterUtilities.filter(new ArrayList<>(Arrays.asList(worldList.clone())), worldFilter).toArray(EMPTY);
+        }
+        return EMPTY;
+    }
+
+    /**
+     * Returns a shallow copy of the internal world list. If the internal world
+     * list has not been initialized, an array of length <code>0</code> is
+     * returned.
+     *
+     * @return an array of worlds.
+     */
+    public static IWorld[] get() {
+        return get(DEFAULT_FILTER);
     }
 }

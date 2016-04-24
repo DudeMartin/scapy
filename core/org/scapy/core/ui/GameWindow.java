@@ -15,6 +15,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * The application user interface.
@@ -44,6 +45,7 @@ public final class GameWindow extends JFrame {
     private final JMenuBar menuBar = new JMenuBar();
     private final JCheckBoxMenuItem developerItem = new JCheckBoxMenuItem("Developer mode");
     private final JMenuItem screenshotItem = new JMenuItem("Screenshot");
+    private final JMenuItem defaultWorldItem = new JMenuItem("Default world");
     private final JMenu pluginMenu = new JMenu("Plugin");
     private final JMenuItem loadItem = new JMenuItem("Load");
     private final JMenuItem settingsItem = new JMenuItem("Settings");
@@ -61,6 +63,9 @@ public final class GameWindow extends JFrame {
             throw new IllegalStateException("The game window should only be created once.");
         }
         window = this;
+        if (Application.isVirtualMode()) {
+            defaultWorldItem.setEnabled(false);
+        }
         if (Settings.getBoolean(DefaultSettings.DEVELOPER_MODE, false)) {
             developerItem.setSelected(true);
             debugMenu.setEnabled(true);
@@ -73,6 +78,7 @@ public final class GameWindow extends JFrame {
         JMenu fileMenu = new JMenu("File");
         fileMenu.add(developerItem);
         fileMenu.add(screenshotItem);
+        fileMenu.add(defaultWorldItem);
         pluginMenu.add(loadItem);
         pluginMenu.add(settingsItem);
         menuBar.add(fileMenu);
@@ -154,6 +160,24 @@ public final class GameWindow extends JFrame {
                 Application.getGame().getCanvas().takeScreenshot();
             }
         });
+        defaultWorldItem.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String input = JOptionPane.showInputDialog(GameWindow.this, "Please enter a default world number.", "Enter Default World", JOptionPane.INFORMATION_MESSAGE);
+                int world;
+                try {
+                    world = Integer.parseInt(input);
+                } catch (NumberFormatException ex) {
+                    world = -1;
+                }
+                if (world <= 0) {
+                    JOptionPane.showMessageDialog(GameWindow.this, "Please enter a valid, positive integer.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                Settings.set(DefaultSettings.INITIAL_WORLD, world);
+            }
+        });
         loadItem.addActionListener(new ActionListener() {
 
             @Override
@@ -222,7 +246,7 @@ public final class GameWindow extends JFrame {
                         }
                     }
                 });
-            } catch (Exception ignored) {}
+            } catch (InterruptedException | InvocationTargetException ignored) {}
         }
     }
 }

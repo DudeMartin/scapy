@@ -85,14 +85,14 @@ public final class Application {
             forcefulShutdown = true;
             if (!userShutdown) {
                 String errorMessage;
-                if (e instanceof IOException) {
-                    errorMessage = "A transmission error occurred while loading the game.";
-                } else if (e instanceof InputMismatchException) {
+                if (e instanceof InputMismatchException) {
                     errorMessage = "Malformed hook data file. The repository may be out of date.";
                 } else if (e instanceof HookDataException) {
                     errorMessage = "A problem with the hook data file occurred. " + e.getMessage();
                 } else if (e instanceof ReflectiveOperationException) {
                     errorMessage = "Could not initialize the main game class.";
+                } else if (e instanceof IOException) {
+                    errorMessage = "A transmission error occurred while loading the game.";
                 } else {
                     errorMessage = "Could not load the game.";
                 }

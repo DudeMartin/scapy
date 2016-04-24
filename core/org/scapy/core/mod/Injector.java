@@ -2,19 +2,24 @@ package org.scapy.core.mod;
 
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
+import org.scapy.Settings;
+import org.scapy.Settings.DefaultSettings;
 import org.scapy.core.GameCanvas;
 import org.scapy.core.Gamepack;
 import org.scapy.core.accessors.IClient;
 import org.scapy.core.accessors.IInteractableObjectDefinition;
 import org.scapy.core.accessors.IItemDefinition;
 import org.scapy.core.accessors.INpcDefinition;
+import org.scapy.utils.WebUtilities;
 
 import java.awt.*;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Scanner;
 
 public final class Injector {
 
+    private static final String DEFAULT_REPOSITORY = "https://www.dropbox.com/s/ulyzhblbdjy6w72/hooks.txt?dl=1";
     private static final String ACCESSOR_BASE;
 
     static {
@@ -28,14 +33,20 @@ public final class Injector {
 
     public static void inject(Gamepack gamepack) throws Exception {
         Map<String, ClassNode> classes = gamepack.classes;
-        Scanner hookData = Hooks.getData(gamepack.getRevision());
-        processHookData(hookData, classes);
-        for (ClassNode clazz : classes.values()) {
-            if (clazz.superName.equals(Type.getInternalName(Canvas.class))) {
-                Transformations.changeSuperclass(clazz, Type.getInternalName(GameCanvas.class));
-                return;
-            }
+        try (Scanner hookData = downloadHookData(gamepack.getRevision())) {
+            processHookData(hookData, classes);
         }
+        subclassCanvas(classes);
+    }
+
+    private static Scanner downloadHookData(int targetRevision) throws IOException {
+        String repositoryAddress = Settings.get(DefaultSettings.HOOK_REPOSITORY, DEFAULT_REPOSITORY);
+        Scanner scanner = new Scanner(WebUtilities.downloadPageSource(repositoryAddress));
+        int currentRevision = scanner.nextInt();
+        if (currentRevision != targetRevision) {
+            throw new HookDataException("The revision of the hook data is outdated (current: " + currentRevision + " target: " + targetRevision + ").");
+        }
+        return scanner;
     }
 
     private static void processHookData(Scanner scanner, Map<String, ClassNode> classes) {
@@ -162,6 +173,15 @@ public final class Injector {
                         break;
                 }
                 break;
+        }
+    }
+
+    private static void subclassCanvas(Map<String, ClassNode> classes) {
+        for (ClassNode clazz : classes.values()) {
+            if (clazz.superName.equals(Type.getInternalName(Canvas.class))) {
+                Transformations.changeSuperclass(clazz, Type.getInternalName(GameCanvas.class));
+                return;
+            }
         }
     }
 }

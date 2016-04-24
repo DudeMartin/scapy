@@ -24,9 +24,9 @@ public class DefinableClassLoader extends ClassLoader {
             try {
                 return defineClass(name, classBytes, 0, classBytes.length);
             } catch (ClassFormatError e) {
-                e.printStackTrace();
                 Application.showMessage(GameWindow.getWindow(), "The hook data specified invalid class modifications.", "Load Error", JOptionPane.ERROR_MESSAGE);
                 Application.shutdown();
+                throw e;
             }
         }
         return super.findClass(name);

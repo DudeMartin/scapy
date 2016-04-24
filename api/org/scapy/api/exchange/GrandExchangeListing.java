@@ -14,7 +14,7 @@ import java.util.Objects;
  *
  * @author Martin Tuskevicius
  */
-public final class GrandExchangeItem {
+public final class GrandExchangeListing {
 
     /**
      * The item ID.
@@ -81,7 +81,7 @@ public final class GrandExchangeItem {
      */
     public final double day180Change;
 
-    GrandExchangeItem(int id, JSONObject source) {
+    GrandExchangeListing(int id, JSONObject source) {
         JSONObject item = source.getJSONObject("item");
         this.id = id;
         this.iconAddress = item.getString("icon");
@@ -112,8 +112,8 @@ public final class GrandExchangeItem {
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;
-        } else if (obj instanceof GrandExchangeItem) {
-            GrandExchangeItem item = (GrandExchangeItem) obj;
+        } else if (obj instanceof GrandExchangeListing) {
+            GrandExchangeListing item = (GrandExchangeListing) obj;
             return item.id == id
                     && item.iconAddress.equals(iconAddress)
                     && item.largeIconAddress.equals(largeIconAddress)

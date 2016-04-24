@@ -1,5 +1,9 @@
 package org.scapy.core.event;
 
+import org.scapy.core.event.listeners.GameLoopListener;
+import org.scapy.core.event.listeners.ModelRenderListener;
+import org.scapy.core.mod.Callbacks;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Collections;
@@ -18,31 +22,51 @@ public final class EventDispatcher {
     }
 
     public void addListener(EventListener listener) {
-        listeners.add(listener);
+        if (listeners.add(listener)) {
+            updateListenerCounters(listener, true);
+        }
     }
 
     public void removeListener(EventListener listener) {
-        listeners.remove(listener);
+        if (listeners.remove(listener)) {
+            updateListenerCounters(listener, false);
+        }
     }
 
     public void clearListeners() {
         listeners.clear();
+        clearListenerCounters();
     }
 
     public void dispatch(EventObject event) {
         for (EventListener listener : listeners) {
-            if (event instanceof AWTEvent) {
-                dispatchWindowEvent(listener, (AWTEvent) event);
-            } else if (event instanceof GameEvent) {
+            if (event instanceof GameEvent) {
                 Listenable listenable = event.getClass().getAnnotation(Listenable.class);
                 GameEvent gameEvent = (GameEvent) event;
                 if (listenable == null || listenable.listener().isAssignableFrom(listener.getClass())) {
                     gameEvent.dispatch(listener);
                 }
+            } else if (event instanceof AWTEvent) {
+                dispatchWindowEvent(listener, (AWTEvent) event);
             } else {
                 throw new UnsupportedOperationException("Unsupported event type.");
             }
         }
+    }
+
+    private void updateListenerCounters(EventListener listener, boolean added) {
+        int delta = added ? 1 : -1;
+        if (listener instanceof ModelRenderListener) {
+            Callbacks.modelRenderListenerCount.addAndGet(delta);
+        }
+        if (listener instanceof GameLoopListener) {
+            Callbacks.gameLoopListenerCount.addAndGet(delta);
+        }
+    }
+
+    private void clearListenerCounters() {
+        Callbacks.modelRenderListenerCount.set(0);
+        Callbacks.gameLoopListenerCount.set(0);
     }
 
     private static void dispatchWindowEvent(EventListener listener, AWTEvent event) {

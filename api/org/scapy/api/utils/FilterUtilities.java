@@ -1,5 +1,6 @@
 package org.scapy.api.utils;
 
+import org.scapy.utils.Filter;
 import org.scapy.utils.Preconditions;
 
 import java.util.Collection;
