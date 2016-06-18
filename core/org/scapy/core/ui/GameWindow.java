@@ -11,10 +11,12 @@ import org.scapy.core.plugin.Plugin;
 
 import javax.swing.*;
 import java.applet.Applet;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 /**
@@ -44,6 +46,7 @@ public final class GameWindow extends JFrame {
     private final PluginSettingsDialog pluginSettings = new PluginSettingsDialog();
     private final JMenuBar menuBar = new JMenuBar();
     private final JCheckBoxMenuItem developerItem = new JCheckBoxMenuItem("Developer mode");
+    private final JMenuItem reloadSettingsItem = new JMenuItem("Reload settings");
     private final JMenuItem screenshotItem = new JMenuItem("Screenshot");
     private final JMenuItem defaultWorldItem = new JMenuItem("Default world");
     private final JMenu pluginMenu = new JMenu("Plugin");
@@ -64,6 +67,7 @@ public final class GameWindow extends JFrame {
         }
         window = this;
         if (Application.isVirtualMode()) {
+            reloadSettingsItem.setEnabled(false);
             defaultWorldItem.setEnabled(false);
         }
         if (Settings.getBoolean(DefaultSettings.DEVELOPER_MODE, false)) {
@@ -77,6 +81,7 @@ public final class GameWindow extends JFrame {
         debugMenu.setVisible(false);
         JMenu fileMenu = new JMenu("File");
         fileMenu.add(developerItem);
+        fileMenu.add(reloadSettingsItem);
         fileMenu.add(screenshotItem);
         fileMenu.add(defaultWorldItem);
         pluginMenu.add(loadItem);
@@ -85,10 +90,10 @@ public final class GameWindow extends JFrame {
         menuBar.add(pluginMenu);
         menuBar.add(debugMenu);
         setJMenuBar(menuBar);
-        add(gamePanel);
         addMenuListeners();
         addWindowListener(new WindowEvents());
         EventDispatcher.instance.addListener(new PluginEvents());
+        setContentPane(gamePanel);
         setResizable(false);
         pack();
     }
@@ -151,6 +156,26 @@ public final class GameWindow extends JFrame {
                 boolean selected = developerItem.isSelected();
                 Settings.set(DefaultSettings.DEVELOPER_MODE, selected);
                 debugMenu.setEnabled(selected);
+                if (!selected) {
+                    for (Component debugComponent : debugMenu.getMenuComponents()) {
+                        JMenuItem debugItem = (JMenuItem) debugComponent;
+                        if (debugItem.isSelected()) {
+                            debugItem.doClick();
+                        }
+                    }
+                }
+            }
+        });
+        reloadSettingsItem.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    Settings.load();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(GameWindow.this, "Could not reload the settings.", "Settings Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
         screenshotItem.addActionListener(new ActionListener() {
@@ -165,17 +190,19 @@ public final class GameWindow extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String input = JOptionPane.showInputDialog(GameWindow.this, "Please enter a default world number.", "Enter Default World", JOptionPane.INFORMATION_MESSAGE);
-                int world;
-                try {
-                    world = Integer.parseInt(input);
-                } catch (NumberFormatException ex) {
-                    world = -1;
+                if (input != null) {
+                    int world;
+                    try {
+                        world = Integer.parseInt(input);
+                    } catch (NumberFormatException ex) {
+                        world = -1;
+                    }
+                    if (world <= 0) {
+                        JOptionPane.showMessageDialog(GameWindow.this, "Please enter a valid, positive integer.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    Settings.set(DefaultSettings.INITIAL_WORLD, world);
                 }
-                if (world <= 0) {
-                    JOptionPane.showMessageDialog(GameWindow.this, "Please enter a valid, positive integer.", "Input Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                Settings.set(DefaultSettings.INITIAL_WORLD, world);
             }
         });
         loadItem.addActionListener(new ActionListener() {
@@ -202,10 +229,7 @@ public final class GameWindow extends JFrame {
             GameInstance game = Application.getGame();
             int option = 0;
             if (game != null && game.isLoggedIn()) {
-                option = JOptionPane.showConfirmDialog(GameWindow.this,
-                        "You are currently logged in. Are you sure you want to quit?",
-                        "Confirmation",
-                        JOptionPane.YES_NO_OPTION);
+                option = JOptionPane.showConfirmDialog(GameWindow.this, "You are currently logged in. Are you sure you want to quit?", "Confirmation", JOptionPane.YES_NO_OPTION);
             }
             if (option == 0) {
                 Application.shutdown();
@@ -216,12 +240,12 @@ public final class GameWindow extends JFrame {
     private class PluginEvents extends PluginAdapter {
 
         @Override
-        public void onStart(final PluginEvent e) {
+        public void onStart(final PluginEvent event) {
             SwingUtilities.invokeLater(new Runnable() {
 
                 @Override
                 public void run() {
-                    Plugin plugin = e.getSource();
+                    Plugin plugin = event.getSource();
                     pluginSettings.addPlugin(plugin);
                     JMenu pluginMenu = plugin.getMenu();
                     if (pluginMenu != null) {
@@ -232,13 +256,13 @@ public final class GameWindow extends JFrame {
         }
 
         @Override
-        public void onStop(final PluginEvent e) {
+        public void onStop(final PluginEvent event) {
             try {
                 SwingUtilities.invokeAndWait(new Runnable() {
 
                     @Override
                     public void run() {
-                        Plugin plugin = e.getSource();
+                        Plugin plugin = event.getSource();
                         pluginSettings.removePlugin(plugin);
                         JMenu pluginMenu = plugin.getMenu();
                         if (pluginMenu != null) {

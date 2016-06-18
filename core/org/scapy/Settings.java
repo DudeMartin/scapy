@@ -21,12 +21,21 @@ public final class Settings {
     /**
      * A collection of default setting names.
      */
-    public interface DefaultSettings {
+    public static final class DefaultSettings {
 
-        String INITIAL_WORLD = "initialWorld";
-        String HOOK_REPOSITORY = "hookRepository";
-        String DEVELOPER_MODE = "developerMode";
-        String SCREENSHOT_FORMAT = "screenshotFormat";
+        public static final String INITIAL_WORLD = "initialWorld";
+        public static final String HOOK_REPOSITORY = "hookRepository";
+        public static final String DEVELOPER_MODE = "developerMode";
+        public static final String FAST_SCREENSHOT = "fastScreenshot";
+        public static final String SCREENSHOT_FORMAT = "screenshotFormat";
+        public static final String LOGOUT_RESIZE = "logoutResize";
+
+        /**
+         * Prevents external initialization.
+         */
+        private DefaultSettings() {
+
+        }
     }
 
     private static final NumberFormat FORMAT = NumberFormat.getInstance();
@@ -99,7 +108,7 @@ public final class Settings {
     public static Number getNumeric(String name) {
         String value = get(name);
         try {
-            return NumberFormat.getInstance().parse(value);
+            return FORMAT.parse(value);
         } catch (NullPointerException e) {
             return null;
         } catch (ParseException e) {
@@ -146,9 +155,18 @@ public final class Settings {
         set(name, value.toString());
     }
 
-    static void initialize() throws IOException {
+    /**
+     * Loads the stored settings from the settings file. The settings are
+     * initially loaded when application starts up. Further invocations of this
+     * method <em>reload</em> the settings from the file. Setting entries from
+     * the file overwrite currently loaded ones (if such mappings exist). This
+     * method does nothing if the application is running in virtual mode.
+     *
+     * @throws IOException if an I/O error occurs.
+     */
+    public static void load() throws IOException {
         if (!Application.isVirtualMode()) {
-            settingsPath = Application.getApplicationPath(Application.NAME + ".settings");
+            settingsPath = Application.getPath(Application.NAME + ".settings");
             if (Files.exists(settingsPath)) {
                 try (InputStream in = Files.newInputStream(settingsPath)) {
                     settings.load(in);
@@ -160,7 +178,7 @@ public final class Settings {
     static void save() throws IOException {
         if (settingsPath != null) {
             try (OutputStream out = Files.newOutputStream(settingsPath)) {
-                settings.store(out, null);
+                settings.store(out, "User-defined application settings.");
             }
         }
     }

@@ -6,6 +6,14 @@ public final class Preconditions {
 
     }
 
+    public static void checkNull(Object... objects) {
+        for (Object o : objects) {
+            if (o == null) {
+                throw new NullPointerException();
+            }
+        }
+    }
+
     public static void check(boolean condition, String message, Class<? extends RuntimeException> type) {
         if (!condition) {
             RuntimeException ex;

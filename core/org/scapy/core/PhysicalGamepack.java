@@ -8,18 +8,14 @@ import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-class PhysicalGamepack extends Gamepack {
-
-    private JarFile archive;
+class PhysicalGamepack extends Gamepack<JarFile> {
 
     PhysicalGamepack(JarFile archive) throws IOException {
-        this.archive = archive;
-        initializeClasses();
-        this.archive = null;
+        super(archive);
     }
 
     @Override
-    protected void initializeClasses() throws IOException {
+    protected void initializeClasses(JarFile archive) throws IOException {
         try {
             Enumeration<JarEntry> entries = archive.entries();
             while (entries.hasMoreElements()) {

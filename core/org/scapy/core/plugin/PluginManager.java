@@ -50,7 +50,7 @@ public final class PluginManager {
             EventListener listener = (EventListener) plugin;
             EventDispatcher.instance.addListener(listener);
         }
-        new Thread(pluginThreads, plugin, name + " Plugin Thread").start();
+        new Thread(pluginThreads, plugin, "[" + name + "] Plugin Thread").start();
     }
 
     /**
@@ -134,7 +134,7 @@ public final class PluginManager {
         synchronized (plugins) {
             plugins.remove(plugin);
         }
-        if (plugin instanceof EventListener) {
+        if (plugin instanceof EventListener && !(plugin instanceof Debugger)) {
             EventListener listener = (EventListener) plugin;
             EventDispatcher.instance.removeListener(listener);
         }

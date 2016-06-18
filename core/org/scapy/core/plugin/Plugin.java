@@ -4,7 +4,8 @@ import org.scapy.core.event.EventDispatcher;
 import org.scapy.core.event.impl.PluginEvent;
 import org.scapy.core.event.impl.PluginEvent.PluginState;
 
-import javax.swing.*;
+import javax.swing.JMenu;
+import javax.swing.JPanel;
 
 public abstract class Plugin implements Runnable {
 

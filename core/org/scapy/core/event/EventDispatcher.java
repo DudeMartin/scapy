@@ -1,10 +1,9 @@
 package org.scapy.core.event;
 
-import org.scapy.core.event.listeners.GameLoopListener;
-import org.scapy.core.event.listeners.ModelRenderListener;
+import org.scapy.core.event.listeners.*;
 import org.scapy.core.mod.Callbacks;
 
-import java.awt.*;
+import java.awt.AWTEvent;
 import java.awt.event.*;
 import java.util.Collections;
 import java.util.EventListener;
@@ -56,17 +55,29 @@ public final class EventDispatcher {
 
     private void updateListenerCounters(EventListener listener, boolean added) {
         int delta = added ? 1 : -1;
+        if (listener instanceof RegionDrawListener) {
+            Callbacks.regionDrawListenerCount.addAndGet(delta);
+        }
         if (listener instanceof ModelRenderListener) {
             Callbacks.modelRenderListenerCount.addAndGet(delta);
         }
         if (listener instanceof GameLoopListener) {
             Callbacks.gameLoopListenerCount.addAndGet(delta);
         }
+        if (listener instanceof SettingListener) {
+            Callbacks.settingListenerCount.addAndGet(delta);
+        }
+        if (listener instanceof SkillListener) {
+            Callbacks.skillListenerCount.addAndGet(delta);
+        }
     }
 
     private void clearListenerCounters() {
+        Callbacks.regionDrawListenerCount.set(0);
         Callbacks.modelRenderListenerCount.set(0);
         Callbacks.gameLoopListenerCount.set(0);
+        Callbacks.settingListenerCount.set(0);
+        Callbacks.skillListenerCount.set(0);
     }
 
     private static void dispatchWindowEvent(EventListener listener, AWTEvent event) {

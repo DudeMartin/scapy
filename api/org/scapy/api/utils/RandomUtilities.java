@@ -2,7 +2,10 @@ package org.scapy.api.utils;
 
 import org.scapy.utils.Preconditions;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.RandomAccess;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -47,7 +50,7 @@ public final class RandomUtilities {
      * @throws NullPointerException if <code>collection</code> is <code>null</code>.
      */
     public static <T> T randomElement(Collection<T> collection) {
-        Objects.requireNonNull(collection);
+        Preconditions.checkNull(collection);
         int size = collection.size();
         if (size > 0) {
             int randomIndex = rnd().nextInt(size);

@@ -2,6 +2,8 @@ package org.scapy.core.accessors;
 
 public interface ICharacter extends IRenderableNode {
 
+    int getCombatCycle();
+
     int getInteractingIndex();
 
     int getOrientation();

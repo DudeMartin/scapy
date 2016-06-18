@@ -12,11 +12,11 @@ import java.util.EventListener;
  */
 public interface PluginListener extends EventListener {
 
-    void onStart(PluginEvent e);
+    void onStart(PluginEvent event);
 
-    void onStop(PluginEvent e);
+    void onStop(PluginEvent event);
 
-    void onPause(PluginEvent e);
+    void onPause(PluginEvent event);
 
-    void onResume(PluginEvent e);
+    void onResume(PluginEvent event);
 }

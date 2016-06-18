@@ -1,8 +1,10 @@
-package org.scapy.api.utils;
+package org.scapy.api.utils.filter;
 
 import org.scapy.utils.Filter;
 import org.scapy.utils.Preconditions;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -33,6 +35,7 @@ public final class FilterUtilities {
      * @param <T>     the filter input type.
      * @return a joined filter.
      */
+    @SafeVarargs
     public static <T> Filter<T> join(final Filter<T>... filters) {
         return new Filter<T>() {
 
@@ -62,12 +65,35 @@ public final class FilterUtilities {
      *                              is <code>null</code>.
      */
     public static <T> Collection<T> filter(Collection<T> collection, Filter<T> filter) {
-        Preconditions.check(collection != null && filter != null, null, NullPointerException.class);
-        for (Iterator<T> iterator = collection.iterator(); iterator.hasNext(); ) {
-            if (!filter.matches(iterator.next())) {
-                iterator.remove();
+        Preconditions.checkNull(collection, filter);
+        if (collection.size() > 0) {
+            for (Iterator<T> iterator = collection.iterator(); iterator.hasNext(); ) {
+                if (!filter.matches(iterator.next())) {
+                    iterator.remove();
+                }
             }
         }
         return collection;
+    }
+
+    /**
+     * Filters out elements that do not meet the criteria of the filter. If the
+     * provided array has elements, the returned array will be a resized copy of
+     * the provided array, where its length will be the number of elements in
+     * the provided array that matched the filter (possibly <code>0</code>).
+     *
+     * @param array  the array.
+     * @param filter the filter.
+     * @param <T>    the array element type.
+     * @return a filtered copy of the provided array.
+     * @throws NullPointerException if <code>array</code> or <code>filter</code>
+     *                              is <code>null</code>.
+     */
+    public static <T> T[] filter(T[] array, Filter<T> filter) {
+        if (array.length > 0) {
+            Collection<T> filtered = filter(new ArrayList<>(Arrays.asList(array)), filter);
+            return (T[]) Arrays.copyOf(filtered.toArray(), filtered.size(), array.getClass());
+        }
+        return array;
     }
 }

@@ -5,10 +5,15 @@ import org.scapy.Settings;
 import org.scapy.Settings.DefaultSettings;
 import org.scapy.core.event.EventDispatcher;
 import org.scapy.core.event.impl.PaintEvent;
+import org.scapy.core.ui.GameWindow;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+import java.awt.AWTEvent;
+import java.awt.Canvas;
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -18,6 +23,7 @@ import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GameCanvas extends Canvas {
 
@@ -32,11 +38,10 @@ public class GameCanvas extends Canvas {
     public static final int DEFAULT_HEIGHT = 503;
 
     private static final String DEFAULT_FORMAT = "PNG";
-    private static String formatName;
     private static DateFormat dateFormat;
-    private static volatile ExecutorService screenshotService;
-    private BufferedImage backBuffer = new BufferedImage(DEFAULT_WIDTH, DEFAULT_HEIGHT, BufferedImage.TYPE_INT_ARGB);
-    private volatile boolean screenshot;
+    private static ExecutorService screenshotService;
+    private volatile BufferedImage backBuffer = new BufferedImage(DEFAULT_WIDTH, DEFAULT_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+    private final AtomicBoolean screenshot = new AtomicBoolean();
 
     /**
      * Signals that a screenshot should be saved. This method does nothing if
@@ -44,9 +49,8 @@ public class GameCanvas extends Canvas {
      */
     public void takeScreenshot() {
         if (!Application.isVirtualMode()) {
-            if (formatName == null || dateFormat == null || screenshotService == null) {
-                synchronized (this) {
-                    formatName = Settings.get(DefaultSettings.SCREENSHOT_FORMAT, DEFAULT_FORMAT);
+            synchronized (GameCanvas.class) {
+                if (dateFormat == null || screenshotService == null) {
                     dateFormat = new SimpleDateFormat("dd.MM.YYYY.HHmm.ss");
                     screenshotService = Executors.newSingleThreadExecutor(new ThreadFactory() {
 
@@ -57,7 +61,7 @@ public class GameCanvas extends Canvas {
                     });
                 }
             }
-            screenshot = true;
+            screenshot.set(true);
         }
     }
 
@@ -65,34 +69,73 @@ public class GameCanvas extends Canvas {
      * Cleans up any resources utilized by the screenshot service. This method
      * is called during the shutdown procedure.
      */
-    public synchronized void cleanupScreenshotResources() {
-        if (screenshotService != null) {
-            screenshotService.shutdown();
+    public void cleanupScreenshotResources() {
+        synchronized (GameCanvas.class) {
+            if (screenshotService != null) {
+                screenshotService.shutdown();
+            }
         }
     }
 
     @Override
     public Graphics getGraphics() {
         Graphics graphics = backBuffer.getGraphics();
-        graphics.setColor(Color.WHITE);
         EventDispatcher.instance.dispatch(new PaintEvent(graphics));
         super.getGraphics().drawImage(backBuffer, 0, 0, null);
         update(graphics);
-        if (screenshot) {
-            saveScreenshot();
-            screenshot = false;
+        if (screenshot.compareAndSet(true, false)) {
+            BufferedImage screenshotImage;
+            if (Settings.getBoolean(DefaultSettings.FAST_SCREENSHOT, false)) {
+                screenshotImage = backBuffer;
+            } else {
+                screenshotImage = new BufferedImage(backBuffer.getWidth(), backBuffer.getHeight(), backBuffer.getType());
+                Graphics screenshotGraphics = screenshotImage.getGraphics();
+                screenshotGraphics.drawImage(backBuffer, 0, 0, null);
+                screenshotGraphics.dispose();
+            }
+            saveScreenshot(screenshotImage);
         }
+        graphics.dispose();
         return backBuffer.createGraphics();
     }
 
     @Override
     public void setSize(int width, int height) {
-        if (width != getWidth() && height != getHeight()) {
+        int currentWidth = getWidth();
+        int currentHeight = getHeight();
+        if (width != currentWidth || height != currentHeight) {
             super.setSize(width, height);
             if (width > 0 && height > 0) {
-                backBuffer = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+                if (width <= currentWidth && height <= currentHeight) {
+                    backBuffer = backBuffer.getSubimage(0, 0, width, height);
+                } else {
+                    backBuffer.flush();
+                    backBuffer = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+                }
             }
         }
+        SwingUtilities.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                GameInstance game = Application.getGame();
+                JFrame window = GameWindow.getWindow();
+                boolean resizable = game.getClientAccessor().isResizableMode();
+                if (game.isLoggedIn()) {
+                    if (window.isResizable() && !resizable) {
+                        window.setResizable(false);
+                        window.validate();
+                        window.pack();
+                    } else if (!window.isResizable() && resizable) {
+                        window.setResizable(true);
+                    }
+                } else if (window.isResizable() && Settings.getBoolean(DefaultSettings.LOGOUT_RESIZE, true)) {
+                    window.setResizable(false);
+                    window.validate();
+                    window.pack();
+                }
+            }
+        });
     }
 
     @Override
@@ -101,21 +144,22 @@ public class GameCanvas extends Canvas {
         super.processEvent(e);
     }
 
-    private synchronized void saveScreenshot() {
+    private static synchronized void saveScreenshot(final BufferedImage screenshot) {
         if (!screenshotService.isShutdown()) {
-            screenshotService.submit(new Runnable() {
+            screenshotService.execute(new Runnable() {
 
                 @Override
                 public void run() {
+                    String formatName = Settings.get(DefaultSettings.SCREENSHOT_FORMAT, DEFAULT_FORMAT);
                     String extension = formatName.toLowerCase();
                     String fileName = "Screenshot " + dateFormat.format(new Date()) + "." + extension;
-                    String filePath = Application.getApplicationPath("screenshots", fileName).toString();
+                    String filePath = Application.getPath("screenshots", fileName).toString();
                     try {
-                        if (!ImageIO.write(backBuffer, formatName, new File(filePath))) {
+                        if (!ImageIO.write(screenshot, formatName, new File(filePath))) {
                             String badFormatName = formatName;
                             formatName = DEFAULT_FORMAT;
                             Settings.set(DefaultSettings.SCREENSHOT_FORMAT, formatName);
-                            ImageIO.write(backBuffer, formatName, new File(filePath.replace(extension, formatName.toLowerCase())));
+                            ImageIO.write(screenshot, formatName, new File(filePath.replace(extension, formatName.toLowerCase())));
                             Application.showMessage("Unsupported screenshot format " + badFormatName + ". Defaulted to " + formatName + ".", "Screenshot Warning", JOptionPane.WARNING_MESSAGE);
                         }
                     } catch (IOException e) {

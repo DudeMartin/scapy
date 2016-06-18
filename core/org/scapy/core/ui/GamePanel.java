@@ -2,7 +2,7 @@ package org.scapy.core.ui;
 
 import org.scapy.core.GameCanvas;
 
-import javax.swing.*;
+import javax.swing.JPanel;
 import java.awt.*;
 
 class GamePanel extends JPanel {

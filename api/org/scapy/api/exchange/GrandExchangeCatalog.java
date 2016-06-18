@@ -27,6 +27,24 @@ public final class GrandExchangeCatalog {
     }
 
     /**
+     * Checks if an item is listed in the Grand Exchange.
+     *
+     * @param id the item ID.
+     * @return <code>true</code> if the item is listed, <code>false</code>
+     *         otherwise.
+     * @throws IOException   if an I/O error occurs.
+     * @throws JSONException if a malformed response was received.
+     */
+    public static boolean isListed(int id) throws IOException {
+        try {
+            WebUtilities.downloadPageSource(String.format(GRAND_EXCHANGE_FORMAT, id));
+            return true;
+        } catch (FileNotFoundException expected) {
+            return false;
+        }
+    }
+
+    /**
      * Queries the Grand Exchange catalog for an item listing. The returned
      * object is immutable.
      *

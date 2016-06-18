@@ -5,25 +5,27 @@ import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.IntInsnNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.scapy.utils.WebUtilities;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.JarFile;
 
-public abstract class Gamepack {
+public abstract class Gamepack<T> {
 
     public final Map<String, ClassNode> classes = new HashMap<>();
     private int cachedRevision = -1;
 
-    Gamepack() {
-
+    Gamepack(T source) throws IOException {
+        initializeClasses(source);
     }
 
-    public static Gamepack create(Object source) throws IOException {
+    public static Gamepack<?> create(Object source) throws IOException {
         if (source instanceof byte[]) {
             return new VirtualGamepack((byte[]) source);
         } else if (source instanceof JarFile) {
@@ -35,8 +37,10 @@ public abstract class Gamepack {
         } else if (source instanceof Path) {
             Path archivePath = (Path) source;
             return new PhysicalGamepack(new JarFile(archivePath.toFile()));
+        } else if (source instanceof URL) {
+            return create(WebUtilities.download((URL) source));
         } else {
-            throw new IllegalArgumentException("Unsupported gamepack source.");
+            throw new UnsupportedOperationException("Unsupported gamepack source.");
         }
     }
 
@@ -62,5 +66,5 @@ public abstract class Gamepack {
         return cachedRevision;
     }
 
-    protected abstract void initializeClasses() throws IOException;
+    protected abstract void initializeClasses(T source) throws IOException;
 }

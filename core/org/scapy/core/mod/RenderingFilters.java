@@ -20,10 +20,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>
  * Initially, the internal set of filters is empty. Filters can be added or
- * removed using the <code>addRenderableFilter</code> or
- * <code>removeRenderableFilter</code> methods, respectively. Because the
- * internal collection is a type of <code>Set</code>, duplicate filters are not
- * retained.
+ * removed using the <code>addFilter</code> or <code>removeFilter</code>
+ * methods, respectively. Because the internal collection is a type of
+ * <code>Set</code>, duplicate filters are not retained.
  *
  * <p>
  * The methods in this class are thread-safe.
@@ -47,7 +46,7 @@ public final class RenderingFilters {
      * @param filter the filter.
      * @throws NullPointerException if <code>filter</code> is <code>null</code>.
      */
-    public static void addRenderableFilter(Filter<IRenderableNode> filter) {
+    public static void addFilter(Filter<IRenderableNode> filter) {
         filterSet.add(filter);
     }
 
@@ -57,11 +56,26 @@ public final class RenderingFilters {
      * @param filter the filter.
      * @throws NullPointerException if <code>filter</code> is <code>null</code>.
      */
-    public static void removeRenderableFilter(Filter<IRenderableNode> filter) {
+    public static void removeFilter(Filter<IRenderableNode> filter) {
         filterSet.remove(filter);
     }
 
-    static boolean matches(IRenderableNode model) {
+    /**
+     * Removes all filters for rendering models.
+     */
+    public static void clearFilters() {
+        filterSet.clear();
+    }
+
+    /**
+     * Checks if the provided model should render (that is, it does not match
+     * any filters).
+     *
+     * @param model the model to check.
+     * @return <code>true</code> if the model should render, <code>false</code>
+     *         otherwise.
+     */
+    public static boolean shouldRender(IRenderableNode model) {
         for (Filter<IRenderableNode> modelFilter : filterSet) {
             if (!modelFilter.matches(model)) {
                 return false;

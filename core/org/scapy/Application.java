@@ -3,12 +3,16 @@ package org.scapy;
 import org.scapy.core.GameInstance;
 import org.scapy.core.event.EventDispatcher;
 import org.scapy.core.mod.HookDataException;
+import org.scapy.core.mod.RenderingFilters;
 import org.scapy.core.plugin.PluginManager;
 import org.scapy.core.ui.GameWindow;
 import org.scapy.utils.Preconditions;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
+import java.awt.Component;
 import java.io.File;
 import java.io.FilePermission;
 import java.io.IOException;
@@ -61,7 +65,7 @@ public final class Application {
             }
         }
         try {
-            Settings.initialize();
+            Settings.load();
         } catch (IOException e) {
             e.printStackTrace();
             showMessage("Could not load previous settings.", "Settings Warning", JOptionPane.WARNING_MESSAGE);
@@ -152,6 +156,7 @@ public final class Application {
         });
         PluginManager.instance.stopAll(10000);
         EventDispatcher.instance.clearListeners();
+        RenderingFilters.clearFilters();
         try {
             Settings.save();
         } catch (IOException e) {
@@ -208,14 +213,15 @@ public final class Application {
     }
 
     /**
-     * Returns the path to a file within this application's directory.
+     * Returns the path to a file within this application's persistent
+     * directory.
      *
      * @param relative the relative paths within the directory.
      * @return the application path.
      * @throws IllegalStateException if the application is running in virtual
      *                               mode.
      */
-    public static Path getApplicationPath(String... relative) {
+    public static Path getPath(String... relative) {
         Preconditions.check(!isVirtualMode(), "The application cannot be running in virtual mode.", IllegalStateException.class);
         String[] relativeParts = new String[relative.length + 1];
         relativeParts[0] = NAME;
@@ -224,14 +230,14 @@ public final class Application {
     }
 
     /**
-     * Returns the path to this application's directory.
+     * Returns the path to this application's persistent directory.
      *
      * @return the path to the directory.
      * @throws IllegalStateException if the application is running in virtual
      *                               mode.
      */
     public static Path getDirectory() {
-        return getApplicationPath();
+        return getPath();
     }
 
     /**

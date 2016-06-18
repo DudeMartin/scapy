@@ -12,14 +12,14 @@ import org.scapy.core.accessors.IItemDefinition;
 import org.scapy.core.accessors.INpcDefinition;
 import org.scapy.utils.WebUtilities;
 
-import java.awt.*;
+import java.awt.Canvas;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Scanner;
 
 public final class Injector {
 
-    private static final String DEFAULT_REPOSITORY = "https://www.dropbox.com/s/ulyzhblbdjy6w72/hooks.txt?dl=1";
+    private static final String DEFAULT_REPOSITORY = "https://www.dropbox.com/s/ztu5buwkos9vr8v/hooks.txt?dl=1";
     private static final String ACCESSOR_BASE;
 
     static {
@@ -31,7 +31,7 @@ public final class Injector {
 
     }
 
-    public static void inject(Gamepack gamepack) throws Exception {
+    public static void inject(Gamepack<?> gamepack) throws Exception {
         Map<String, ClassNode> classes = gamepack.classes;
         try (Scanner hookData = downloadHookData(gamepack.getRevision())) {
             processHookData(hookData, classes);
@@ -124,6 +124,9 @@ public final class Injector {
         String dummyValue       = parts[4];
         ClassNode targetClass   = classes.get(targetOwner);
         switch (callerName) {
+            case "drawRegion":
+                Transformations.addDrawRegionCallback(targetClass, targetName, targetDescriptor);
+                break;
             case "sortWorlds":
                 Transformations.addSortWorldsCallback(targetClass, targetName, targetDescriptor);
                 break;

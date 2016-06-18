@@ -6,7 +6,7 @@ import org.scapy.core.event.GameEvent;
 import org.scapy.core.event.Listenable;
 import org.scapy.core.event.listeners.PaintListener;
 
-import java.awt.*;
+import java.awt.Graphics;
 import java.util.EventListener;
 
 @Listenable(listener = PaintListener.class)

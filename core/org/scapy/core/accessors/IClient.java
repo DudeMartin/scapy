@@ -1,8 +1,12 @@
 package org.scapy.core.accessors;
 
-import java.awt.*;
+import java.awt.Canvas;
 
 public interface IClient {
+
+    IWorld[] getWorlds();
+
+    int getGameCycle();
 
     int[] getRasterizer2DPixels();
 
@@ -28,9 +32,9 @@ public interface IClient {
 
     INpcDefinition getNpcDefinition(int id);
 
-    void worldToScreen(int x, int y, int z);
+    void worldToScreen(int preciseX, int preciseY, int height);
 
-    int getTileHeight(int x, int y, int plane);
+    int getTileHeight(int preciseX, int preciseY, int plane);
 
     boolean isResizableMode();
 

@@ -12,19 +12,19 @@ import java.util.List;
 
 public final class PluginLoader {
 
+    public static class PluginLoadException extends RuntimeException {
+
+        private PluginLoadException(String message) {
+            super(message);
+        }
+    }
+
 	private PluginLoader() {
 
 	}
 
-	public static class PluginLoadException extends RuntimeException {
-
-		private PluginLoadException(String message) {
-			super(message);
-		}
-	}
-
-	public static Plugin load(Gamepack gamepack) throws ReflectiveOperationException {
-		ClassLoader loader = new DefinableClassLoader(gamepack.classes, false);
+	public static Plugin load(final Gamepack<?> gamepack) throws ReflectiveOperationException {
+        ClassLoader loader = new DefinableClassLoader(gamepack.classes);
 		for (ClassNode clazz : gamepack.classes.values()) {
 			List<AnnotationNode> annotations = clazz.visibleAnnotations;
 			if (annotations != null) {

@@ -3,16 +3,15 @@ package org.scapy.core.utils;
 import org.objectweb.asm.tree.ClassNode;
 import org.scapy.Application;
 
-import javax.swing.*;
-import java.util.HashMap;
+import javax.swing.JOptionPane;
 import java.util.Map;
 
 public class DefinableClassLoader extends ClassLoader {
 
     private final Map<String, ClassNode> classes;
 
-    public DefinableClassLoader(Map<String, ClassNode> classes, boolean clone) {
-        this.classes = clone ? new HashMap<>(classes) : classes;
+    public DefinableClassLoader(Map<String, ClassNode> classes) {
+        this.classes = classes;
     }
 
     @Override

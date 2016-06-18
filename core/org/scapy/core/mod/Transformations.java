@@ -37,6 +37,20 @@ class Transformations implements Opcodes {
         clazz.methods.add(getter);
     }
 
+    static void addDrawRegionCallback(ClassNode clazz, String targetName, String targetDescriptor) {
+        for (MethodNode method : (List<MethodNode>) clazz.methods) {
+            if (method.name.equals(targetName) && method.desc.equals(targetDescriptor)) {
+                InsnList instructions = method.instructions;
+                for (AbstractInsnNode instruction : instructions.toArray()) {
+                    if (instruction.getOpcode() == RETURN) {
+                        instructions.insertBefore(instruction, Callbacks.generateInstruction("onDrawRegion"));
+                    }
+                }
+                instructions.add(Callbacks.generateInstruction("onDrawRegion"));
+            }
+        }
+    }
+
     static void addSortWorldsCallback(ClassNode clazz, String targetName, String targetDescriptor) {
         for (MethodNode method : (List<MethodNode>) clazz.methods) {
             if (method.name.equals(targetName) && method.desc.equals(targetDescriptor)) {
@@ -286,7 +300,7 @@ class Transformations implements Opcodes {
     }
 
     private static Object getDummy(String methodDescriptor, String dummyValue) {
-        char type = methodDescriptor.charAt(methodDescriptor.indexOf(")") - 1);
+        char type = methodDescriptor.charAt(methodDescriptor.indexOf(')') - 1);
         switch (type) {
             case 'I':
                 return Integer.parseInt(dummyValue);

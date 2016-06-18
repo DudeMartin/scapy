@@ -20,7 +20,6 @@ import java.nio.file.Path;
 public class GameInstance {
 
     private static final int DEFAULT_WORLD = 2;
-    private Gamepack gamepack;
     private GameStub stub;
     private Applet clientApplet;
     private IClient clientAccessor;
@@ -35,8 +34,9 @@ public class GameInstance {
 
     private void initialize(int initialWorld) throws Exception {
         String pageAddress = "http://oldschool" + initialWorld + ".runescape.com/";
+        Gamepack<?> gamepack;
         if (!Application.isVirtualMode()) {
-            Path gamepackPath = Application.getApplicationPath("data", "gamepack.jar");
+            Path gamepackPath = Application.getPath("data", "gamepack.jar");
             if (Files.exists(gamepackPath)) {
                 gamepack = Gamepack.create(gamepackPath);
                 try {
@@ -57,11 +57,11 @@ public class GameInstance {
         }
         Injector.inject(gamepack);
         stub = new GameStub(new URL(pageAddress), WebUtilities.parseParameters(WebUtilities.downloadPageSource(pageAddress)));
-        start();
+        start(gamepack);
     }
 
-    private void start() throws Exception {
-        Object clientInstance = new DefinableClassLoader(gamepack.classes, true).loadClass("client").newInstance();
+    private void start(Gamepack<?> gamepack) throws Exception {
+        Object clientInstance = new DefinableClassLoader(gamepack.classes).loadClass("client").newInstance();
         clientApplet = (Applet) clientInstance;
         clientAccessor = (IClient) clientInstance;
         clientApplet.setStub(stub);
@@ -95,7 +95,7 @@ public class GameInstance {
         return WebUtilities.download(pageAddress + "gamepack.jar");
     }
 
-    private static Gamepack saveGamepack(Path gamepackPath, String pageAddress) throws IOException {
+    private static Gamepack<?> saveGamepack(Path gamepackPath, String pageAddress) throws IOException {
         Files.write(gamepackPath, downloadGamepack(pageAddress));
         return Gamepack.create(gamepackPath);
     }

@@ -9,7 +9,9 @@ import org.scapy.core.plugin.PluginManager;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -116,12 +118,12 @@ class PluginSettingsDialog extends JDialog implements ListSelectionListener, Act
 	private class PluginEvents extends PluginAdapter {
 
 		@Override
-		public void onPause(final PluginEvent e) {
+		public void onPause(final PluginEvent event) {
 			SwingUtilities.invokeLater(new Runnable() {
 
 				@Override
 				public void run() {
-					if (pluginList.getSelectedIndex() != -1 && e.getSource() == selectedPlugin()) {
+					if (pluginList.getSelectedIndex() != -1 && event.getSource() == selectedPlugin()) {
 						pauseResumeButton.setText("Resume");
 					}
 				}
@@ -129,12 +131,12 @@ class PluginSettingsDialog extends JDialog implements ListSelectionListener, Act
 		}
 
 		@Override
-		public void onResume(final PluginEvent e) {
+		public void onResume(final PluginEvent event) {
 			SwingUtilities.invokeLater(new Runnable() {
 
 				@Override
 				public void run() {
-					if (pluginList.getSelectedIndex() != -1 && e.getSource() == selectedPlugin()) {
+					if (pluginList.getSelectedIndex() != -1 && event.getSource() == selectedPlugin()) {
 						pauseResumeButton.setText("Pause");
 					}
 				}

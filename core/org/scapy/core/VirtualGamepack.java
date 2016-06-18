@@ -8,18 +8,14 @@ import java.io.IOException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
-class VirtualGamepack extends Gamepack {
-
-    private byte[] gamepackBytes;
+class VirtualGamepack extends Gamepack<byte[]> {
 
     VirtualGamepack(byte[] gamepackBytes) throws IOException {
-        this.gamepackBytes = gamepackBytes;
-        initializeClasses();
-        this.gamepackBytes = null;
+        super(gamepackBytes);
     }
 
     @Override
-    protected void initializeClasses() throws IOException {
+    protected void initializeClasses(byte[] gamepackBytes) throws IOException {
         try (JarInputStream in = new JarInputStream(new ByteArrayInputStream(gamepackBytes))) {
             JarEntry entry;
             while ((entry = in.getNextJarEntry()) != null) {
